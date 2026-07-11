@@ -9,6 +9,20 @@ app.use(express.json());
 const ANDROID_UA = "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Mobile Safari/537.36";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const CHROMIUM_ARGS = [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--disable-accelerated-2d-canvas",
+  "--no-first-run",
+  "--no-zygote",
+  "--single-process",
+  "--disable-gpu",
+  "--disable-background-timer-throttling",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-renderer-backgrounding",
+];
+
 async function waitForTasks(page, timeoutMs = 60000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -70,7 +84,10 @@ async function waitForUnlock(page, timeoutMs = 300000) {
 }
 
 async function bypassLootLabs(url) {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: CHROMIUM_ARGS,
+  });
   try {
     const context = await browser.newContext({
       userAgent: ANDROID_UA,
