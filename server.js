@@ -1,5 +1,5 @@
 import express from "express";
-import { launch } from "cloakbrowser";
+import { chromium } from "playwright";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -70,7 +70,7 @@ async function waitForUnlock(page, timeoutMs = 300000) {
 }
 
 async function bypassLootLabs(url) {
-  const browser = await launch({ headless: true });
+  const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext({
       userAgent: ANDROID_UA,
