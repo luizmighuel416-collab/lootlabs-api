@@ -87,6 +87,7 @@ async function bypassLootLabs(url) {
   const browser = await chromium.launch({
     headless: true,
     args: CHROMIUM_ARGS,
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
   });
   try {
     const context = await browser.newContext({
