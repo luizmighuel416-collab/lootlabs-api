@@ -1,5 +1,6 @@
 import express from "express";
 import { chromium } from "playwright";
+import { execSync } from "child_process";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,29 @@ const CHROMIUM_ARGS = [
   "--disable-backgrounding-occluded-windows",
   "--disable-renderer-backgrounding",
 ];
+
+function findChromium() {
+  const paths = [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/app/node_modules/playwright/.local-browsers/chromium-*/chrome-linux/chrome",
+  ];
+  for (const p of paths) {
+    try {
+      if (p.includes("*")) {
+        const dir = p.split("*")[0];
+        const files = execSync(`ls ${dir}*/chrome-linux/chrome 2>/dev/null || echo ""`).toString().trim();
+        if (files) return files.split("\n")[0];
+      } else {
+        execSync(`test -x ${p}`);
+        return p;
+      }
+    } catch {}
+  }
+  return undefined;
+}
 
 async function waitForTasks(page, timeoutMs = 60000) {
   const start = Date.now();
@@ -84,10 +108,13 @@ async function waitForUnlock(page, timeoutMs = 300000) {
 }
 
 async function bypassLootLabs(url) {
+  const executablePath = findChromium();
+  console.log("[DEBUG] Chromium path:", executablePath || "auto");
+
   const browser = await chromium.launch({
     headless: true,
     args: CHROMIUM_ARGS,
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined,
+    executablePath,
   });
   try {
     const context = await browser.newContext({
